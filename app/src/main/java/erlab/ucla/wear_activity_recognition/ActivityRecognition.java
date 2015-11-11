@@ -12,11 +12,13 @@ import android.os.PowerManager;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import java.util.Collections;
+
 /**
  * Created by arjun on 11/10/15.
  * mean - done
  * variance - done
- * minmax
+ * minmax - done
  * magnit
  * diff
  * cross
@@ -26,6 +28,7 @@ public class ActivityRecognition extends Service implements SensorEventListener2
     private static final int TIME_WINDOW = 20; // 20 seconds
     private static final int BUF_SIZE    = TIME_WINDOW*SAMPLE_RATE;
     private static float[][] sensor_data = new float [BUF_SIZE][6]; // accel,gyro xyz
+    private static long startTime = System.currentTimeMillis();
     private static int i;
     private static SensorManager mSensorManager;
     private static PowerManager.WakeLock mWakeLock = null;
@@ -49,15 +52,17 @@ public class ActivityRecognition extends Service implements SensorEventListener2
                 if(i == (BUF_SIZE-1)){
                     setSensors(false);
                     //compute all data;
+                    startTime = System.currentTimeMillis();
                     float[] mean = getMean();
                     float[] var  = getVar(mean);
+                    float[] minmax = getMinMax();
                     Log.d("DATA_MEAN", mean[0] + "," + mean[1] + "," + mean[2] + "," + mean[3] + "," + mean[4] + "," + mean[5]);
                     Log.d("DATA_VAR", var[0] + "," + var[1] + "," + var[2] + "," + var[3] + "," + var[4] + "," + var[5]);
+                    Log.d("DATA_MINMAX", var[0] + "," + var[1] + "," + var[2] + "," + var[3] + "," + var[4] + "," + var[5]+ "," + var[6]+ "," + var[7]+ "," + var[8]+ "," + var[9]+ "," + var[10]+ "," + var[11]);
                     setSensors(true);
                 }
                   break;
         }
-
     }
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
@@ -80,7 +85,6 @@ public class ActivityRecognition extends Service implements SensorEventListener2
         mean[3] /= BUF_SIZE;
         mean[4] /= BUF_SIZE;
         mean[5] /= BUF_SIZE;
-
         return mean;
     }
 
@@ -101,6 +105,25 @@ public class ActivityRecognition extends Service implements SensorEventListener2
         var[4] /= BUF_SIZE;
         var[5] /= BUF_SIZE;
         return var;
+    }
+
+    private static float[] getMinMax(){
+        float[] MinMax = new float[12];
+        for(float[] row : sensor_data){
+            if(MinMax[0] < row[0]) MinMax[0] = row[0];
+            if(MinMax[1] > row[0]) MinMax[1] = row[0];
+            if(MinMax[2] < row[1]) MinMax[2] = row[1];
+            if(MinMax[3] > row[1]) MinMax[3] = row[1];
+            if(MinMax[4] < row[2]) MinMax[4] = row[2];
+            if(MinMax[5] > row[2]) MinMax[5] = row[2];
+            if(MinMax[6] < row[3]) MinMax[6] = row[3];
+            if(MinMax[7] > row[3]) MinMax[7] = row[3];
+            if(MinMax[8] < row[4]) MinMax[8] = row[4];
+            if(MinMax[9] > row[4]) MinMax[9] = row[4];
+            if(MinMax[10] < row[5]) MinMax[10] = row[5];
+            if(MinMax[11] > row[5]) MinMax[11] = row[5];
+        }
+        return MinMax;
     }
     private void setSensors(boolean STATE){
         if(!STATE){
